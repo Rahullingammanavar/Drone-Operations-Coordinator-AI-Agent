@@ -176,16 +176,24 @@ def process_query(query: str, sheets_manager) -> str:
     # Query pilots
     if 'pilot' in query_lower and ('show' in query_lower or 'list' in query_lower or 'available' in query_lower):
         pilots = sheets_manager.get_pilots()
+        
+        if len(pilots) == 0:
+            return "No pilot data available in the system."
+        
         # Normalize column names
         pilots.columns = pilots.columns.str.lower().str.strip()
+        
+        # Check if required columns exist
+        if 'status' not in pilots.columns:
+            return f"Error: 'status' column not found in pilots data. Available columns: {list(pilots.columns)}"
         
         # Filter based on query
         if 'available' in query_lower:
             pilots = pilots[pilots['status'] == 'Available']
         
-        if 'bangalore' in query_lower:
+        if 'bangalore' in query_lower and 'location' in pilots.columns:
             pilots = pilots[pilots['location'].str.contains('Bangalore', case=False, na=False)]
-        elif 'mumbai' in query_lower:
+        elif 'mumbai' in query_lower and 'location' in pilots.columns:
             pilots = pilots[pilots['location'].str.contains('Mumbai', case=False, na=False)]
         
         if len(pilots) == 0:
@@ -200,19 +208,27 @@ def process_query(query: str, sheets_manager) -> str:
     # Query drones
     elif 'drone' in query_lower and ('show' in query_lower or 'list' in query_lower or 'available' in query_lower):
         drones = sheets_manager.get_drones()
+        
+        if len(drones) == 0:
+            return "No drone data available in the system."
+        
         # Normalize column names
         drones.columns = drones.columns.str.lower().str.strip()
+        
+        # Check if required columns exist
+        if 'status' not in drones.columns:
+            return f"Error: 'status' column not found in drones data. Available columns: {list(drones.columns)}"
         
         # Filter based on query
         if 'available' in query_lower:
             drones = drones[drones['status'] == 'Available']
         
-        if 'thermal' in query_lower:
+        if 'thermal' in query_lower and 'capabilities' in drones.columns:
             drones = drones[drones['capabilities'].str.contains('Thermal', case=False, na=False)]
         
-        if 'bangalore' in query_lower:
+        if 'bangalore' in query_lower and 'location' in drones.columns:
             drones = drones[drones['location'].str.contains('Bangalore', case=False, na=False)]
-        elif 'mumbai' in query_lower:
+        elif 'mumbai' in query_lower and 'location' in drones.columns:
             drones = drones[drones['location'].str.contains('Mumbai', case=False, na=False)]
         
         if len(drones) == 0:
@@ -227,10 +243,14 @@ def process_query(query: str, sheets_manager) -> str:
     # Query missions
     elif 'mission' in query_lower or 'project' in query_lower:
         missions = sheets_manager.get_missions()
+        
+        if len(missions) == 0:
+            return "No mission data available in the system."
+        
         # Normalize column names
         missions.columns = missions.columns.str.lower().str.strip()
         
-        if 'urgent' in query_lower:
+        if 'urgent' in query_lower and 'priority' in missions.columns:
             missions = missions[missions['priority'].str.contains('Urgent', case=False, na=False)]
         
         response = f"Found **{len(missions)}** mission(s):\n\n"
@@ -253,14 +273,20 @@ def process_query(query: str, sheets_manager) -> str:
         
         # Check assigned pilots and drones
         for idx, pilot in pilots.iterrows():
-            if pilot['status'] == 'Assigned':
-                all_conflicts.append(f"⚠️ Pilot {pilot['name']} is assigned to {pilot['current_assignment']}")
+            pilot_status = pilot.get('status', '')
+            if pilot_status == 'Assigned':
+                pilot_name = pilot.get('name', 'Unknown')
+                current_assignment = pilot.get('current_assignment', 'Unknown')
+                all_conflicts.append(f"⚠️ Pilot {pilot_name} is assigned to {current_assignment}")
         
         for idx, drone in drones.iterrows():
-            if drone['status'] == 'Maintenance':
-                all_conflicts.append(f"🚨 Drone {drone['drone_id']} is in maintenance")
-            elif drone['status'] == 'Assigned':
-                all_conflicts.append(f"⚠️ Drone {drone['drone_id']} is assigned to {drone['current_assignment']}")
+            drone_status = drone.get('status', '')
+            drone_id = drone.get('drone_id', 'Unknown')
+            if drone_status == 'Maintenance':
+                all_conflicts.append(f"🚨 Drone {drone_id} is in maintenance")
+            elif drone_status == 'Assigned':
+                current_assignment = drone.get('current_assignment', 'Unknown')
+                all_conflicts.append(f"⚠️ Drone {drone_id} is assigned to {current_assignment}")
         
         if len(all_conflicts) == 0:
             return "✅ No conflicts detected! All systems operational."
