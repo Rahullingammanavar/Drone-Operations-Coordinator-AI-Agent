@@ -427,8 +427,59 @@ def process_query(query: str, sheets_manager) -> str:
     
     # Update status
     elif 'update' in query_lower and 'status' in query_lower:
-        # Simple status update handler
-        return "To update status, please use the format: 'Update pilot P001 status to Available'"
+        # Parse update command: "update pilot P001 status to Available" or "update drone D001 status to Maintenance"
+        import re
+        
+        # Try to match pilot update pattern
+        pilot_match = re.search(r'update\s+pilot\s+(\w+)\s+status\s+to\s+(\w+)', query_lower)
+        drone_match = re.search(r'update\s+drone\s+(\w+)\s+status\s+to\s+(\w+)', query_lower)
+        
+        if pilot_match:
+            pilot_id = pilot_match.group(1).upper()
+            new_status = pilot_match.group(2).capitalize()
+            
+            # Validate status
+            valid_statuses = ['Available', 'Assigned', 'On Leave']
+            if new_status not in valid_statuses:
+                return f"❌ Invalid status '{new_status}'. Valid statuses: {', '.join(valid_statuses)}"
+            
+            # Update pilot status
+            success = sheets_manager.update_pilot_status(pilot_id, new_status)
+            if success:
+                return f"✅ Successfully updated pilot {pilot_id} status to **{new_status}**"
+            else:
+                return f"❌ Failed to update pilot {pilot_id}. Pilot ID not found."
+        
+        elif drone_match:
+            drone_id = drone_match.group(1).upper()
+            new_status = drone_match.group(2).capitalize()
+            
+            valid_statuses = ['Available', 'Assigned', 'Maintenance']
+            if new_status not in valid_statuses:
+                return f"❌ Invalid status '{new_status}'. Valid statuses: {', '.join(valid_statuses)}"
+            
+            # Update drone status
+            success = sheets_manager.update_drone_status(drone_id, new_status)
+            if success:
+                return f"✅ Successfully updated drone {drone_id} status to **{new_status}**"
+            else:
+                return f"❌ Failed to update drone {drone_id}. Drone ID not found."
+        
+        else:
+            return """To update status, use these formats:
+
+**Pilot Status:**
+- "Update pilot P001 status to Available"
+- "Update pilot P002 status to Assigned"  
+- "Update pilot P003 status to On Leave"
+
+**Drone Status:**
+- "Update drone D001 status to Available"
+- "Update drone D002 status to Maintenance"
+- "Update drone D003 status to Assigned"
+
+Valid pilot statuses: Available, Assigned, On Leave
+Valid drone statuses: Available, Maintenance, Assigned"""
     
     # Default: Use Gemini for general queries
     else:

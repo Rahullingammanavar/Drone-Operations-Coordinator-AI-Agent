@@ -150,6 +150,32 @@ class SheetsManager:
             print(f"Error updating pilot assignment: {e}")
             return False
     
+    def update_drone_status(self, drone_id: str, new_status: str) -> bool:
+        """
+        Update drone status in Google Sheet
+        
+        Args:
+            drone_id: Drone ID (e.g., 'D001')
+            new_status: New status ('Available', 'Maintenance', 'Assigned')
+        
+        Returns:
+            bool: True if successful
+        """
+        try:
+            drones = self.drone_sheet.get_all_records()
+            
+            for idx, drone in enumerate(drones):
+                if drone['drone_id'] == drone_id:
+                    row_number = idx + 2
+                    # Update status column (column 4)
+                    self.drone_sheet.update_cell(row_number, 4, new_status)
+                    return True
+            
+            return False
+        except Exception as e:
+            print(f"Error updating drone status: {e}")
+            return False
+    
     def update_drone_assignment(self, drone_id: str, assignment: str) -> bool:
         """
         Update drone assignment in Google Sheet
