@@ -84,7 +84,16 @@ def init_sheets_manager():
 def get_pilot_summary(sheets_manager):
     """Get summary of pilot roster"""
     pilots = sheets_manager.get_pilots()
+    
+    # Normalize column names (lowercase and strip spaces)
+    pilots.columns = pilots.columns.str.lower().str.strip()
+    
     total = len(pilots)
+    
+    # Handle case where 'status' column might not exist
+    if 'status' not in pilots.columns:
+        return {'total': total, 'available': 0, 'assigned': 0, 'on_leave': 0}
+    
     available = len(pilots[pilots['status'] == 'Available'])
     assigned = len(pilots[pilots['status'] == 'Assigned'])
     on_leave = len(pilots[pilots['status'] == 'On Leave'])
@@ -100,7 +109,16 @@ def get_pilot_summary(sheets_manager):
 def get_drone_summary(sheets_manager):
     """Get summary of drone fleet"""
     drones = sheets_manager.get_drones()
+    
+    # Normalize column names (lowercase and strip spaces)
+    drones.columns = drones.columns.str.lower().str.strip()
+    
     total = len(drones)
+    
+    # Handle case where 'status' column might not exist
+    if 'status' not in drones.columns:
+        return {'total': total, 'available': 0, 'maintenance': 0, 'assigned': 0}
+    
     available = len(drones[drones['status'] == 'Available'])
     maintenance = len(drones[drones['status'] == 'Maintenance'])
     assigned = len(drones[drones['status'] == 'Assigned'])
@@ -116,37 +134,37 @@ def get_drone_summary(sheets_manager):
 def format_pilot_info(pilot_row):
     """Format pilot information for display"""
     return f"""
-**{pilot_row['name']}** (ID: {pilot_row['pilot_id']})
-- **Skills**: {pilot_row['skills']}
-- **Certifications**: {pilot_row['certifications']}
-- **Location**: {pilot_row['location']}
-- **Status**: {pilot_row['status']}
-- **Current Assignment**: {pilot_row['current_assignment']}
-- **Available From**: {pilot_row['available_from']}
+**{pilot_row.get('name', 'N/A')}** (ID: {pilot_row.get('pilot_id', 'N/A')})
+- **Skills**: {pilot_row.get('skills', 'N/A')}
+- **Certifications**: {pilot_row.get('certifications', 'N/A')}
+- **Location**: {pilot_row.get('location', 'N/A')}
+- **Status**: {pilot_row.get('status', 'N/A')}
+- **Current Assignment**: {pilot_row.get('current_assignment', 'N/A')}
+- **Available From**: {pilot_row.get('available_from', 'N/A')}
 """
 
 
 def format_drone_info(drone_row):
     """Format drone information for display"""
     return f"""
-**{drone_row['model']}** (ID: {drone_row['drone_id']})
-- **Capabilities**: {drone_row['capabilities']}
-- **Location**: {drone_row['location']}
-- **Status**: {drone_row['status']}
-- **Current Assignment**: {drone_row['current_assignment']}
-- **Maintenance Due**: {drone_row['maintenance_due']}
+**{drone_row.get('model', 'N/A')}** (ID: {drone_row.get('drone_id', 'N/A')})
+- **Capabilities**: {drone_row.get('capabilities', 'N/A')}
+- **Location**: {drone_row.get('location', 'N/A')}
+- **Status**: {drone_row.get('status', 'N/A')}
+- **Current Assignment**: {drone_row.get('current_assignment', 'N/A')}
+- **Maintenance Due**: {drone_row.get('maintenance_due', 'N/A')}
 """
 
 
 def format_mission_info(mission_row):
     """Format mission information for display"""
     return f"""
-**{mission_row['project_id']}** - {mission_row['client']}
-- **Location**: {mission_row['location']}
-- **Required Skills**: {mission_row['required_skills']}
-- **Required Certifications**: {mission_row['required_certs']}
-- **Duration**: {mission_row['start_date']} to {mission_row['end_date']}
-- **Priority**: {mission_row['priority']}
+**{mission_row.get('project_id', 'N/A')}** - {mission_row.get('client', 'N/A')}
+- **Location**: {mission_row.get('location', 'N/A')}
+- **Required Skills**: {mission_row.get('required_skills', 'N/A')}
+- **Required Certifications**: {mission_row.get('required_certs', 'N/A')}
+- **Duration**: {mission_row.get('start_date', 'N/A')} to {mission_row.get('end_date', 'N/A')}
+- **Priority**: {mission_row.get('priority', 'N/A')}
 """
 
 
@@ -158,6 +176,8 @@ def process_query(query: str, sheets_manager) -> str:
     # Query pilots
     if 'pilot' in query_lower and ('show' in query_lower or 'list' in query_lower or 'available' in query_lower):
         pilots = sheets_manager.get_pilots()
+        # Normalize column names
+        pilots.columns = pilots.columns.str.lower().str.strip()
         
         # Filter based on query
         if 'available' in query_lower:
@@ -180,6 +200,8 @@ def process_query(query: str, sheets_manager) -> str:
     # Query drones
     elif 'drone' in query_lower and ('show' in query_lower or 'list' in query_lower or 'available' in query_lower):
         drones = sheets_manager.get_drones()
+        # Normalize column names
+        drones.columns = drones.columns.str.lower().str.strip()
         
         # Filter based on query
         if 'available' in query_lower:
@@ -205,6 +227,8 @@ def process_query(query: str, sheets_manager) -> str:
     # Query missions
     elif 'mission' in query_lower or 'project' in query_lower:
         missions = sheets_manager.get_missions()
+        # Normalize column names
+        missions.columns = missions.columns.str.lower().str.strip()
         
         if 'urgent' in query_lower:
             missions = missions[missions['priority'].str.contains('Urgent', case=False, na=False)]
@@ -220,6 +244,10 @@ def process_query(query: str, sheets_manager) -> str:
         pilots = sheets_manager.get_pilots()
         drones = sheets_manager.get_drones()
         missions = sheets_manager.get_missions()
+        # Normalize column names
+        pilots.columns = pilots.columns.str.lower().str.strip()
+        drones.columns = drones.columns.str.lower().str.strip()
+        missions.columns = missions.columns.str.lower().str.strip()
         
         all_conflicts = []
         
@@ -256,6 +284,12 @@ def process_query(query: str, sheets_manager) -> str:
             return "Please specify a project ID (e.g., PRJ001) to get assignment suggestions."
         
         missions = sheets_manager.get_missions()
+        # Normalize column names
+        missions.columns = missions.columns.str.lower().str.strip()
+        
+        if 'project_id' not in missions.columns:
+            return f"Error: 'project_id' column not found in missions data. Available columns: {list(missions.columns)}"
+        
         mission = missions[missions['project_id'] == project_id]
         
         if len(mission) == 0:
@@ -266,6 +300,15 @@ def process_query(query: str, sheets_manager) -> str:
         # Find suitable pilots and drones
         pilots = sheets_manager.get_pilots()
         drones = sheets_manager.get_drones()
+        # Normalize column names
+        pilots.columns = pilots.columns.str.lower().str.strip()
+        drones.columns = drones.columns.str.lower().str.strip()
+        
+        # Check if required columns exist
+        if 'status' not in pilots.columns:
+            return f"Error: 'status' column not found in pilots data. Available columns: {list(pilots.columns)}"
+        if 'status' not in drones.columns:
+            return f"Error: 'status' column not found in drones data. Available columns: {list(drones.columns)}"
         
         available_pilots = pilots[pilots['status'] == 'Available']
         available_drones = drones[drones['status'] == 'Available']
@@ -321,12 +364,21 @@ def process_query(query: str, sheets_manager) -> str:
             drones = sheets_manager.get_drones()
             missions = sheets_manager.get_missions()
             
+            # Normalize column names
+            pilots.columns = pilots.columns.str.lower().str.strip()
+            drones.columns = drones.columns.str.lower().str.strip()
+            missions.columns = missions.columns.str.lower().str.strip()
+            
+            # Calculate available counts safely
+            pilots_available = len(pilots[pilots['status']=='Available']) if 'status' in pilots.columns else 0
+            drones_available = len(drones[drones['status']=='Available']) if 'status' in drones.columns else 0
+            
             context = f"""
 You are a Drone Operations Coordinator AI assistant for Skylark Drones.
 
 Current Status:
-- Pilots: {len(pilots)} total ({len(pilots[pilots['status']=='Available'])} available)
-- Drones: {len(drones)} total ({len(drones[drones['status']=='Available'])} available)
+- Pilots: {len(pilots)} total ({pilots_available} available)
+- Drones: {len(drones)} total ({drones_available} available)
 - Missions: {len(missions)} total
 
 Pilot Data:
