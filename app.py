@@ -69,8 +69,21 @@ if 'sheets_manager' not in st.session_state:
 def init_gemini():
     """Initialize Gemini API"""
     api_key = os.getenv('GEMINI_API_KEY')
+    if not api_key:
+        # Try to get from Streamlit secrets
+        try:
+            import streamlit as st
+            if hasattr(st, 'secrets') and 'GEMINI_API_KEY' in st.secrets:
+                api_key = st.secrets['GEMINI_API_KEY']
+        except:
+            pass
+    
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY not found in environment or secrets")
+    
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-pro')
+    # Use the latest model name
+    model = genai.GenerativeModel('gemini-1.5-flash')
     return model
 
 
@@ -425,7 +438,12 @@ Provide a helpful, concise response based on the available data.
             return response.text
             
         except Exception as e:
-            return f"I can help you with:\n- Viewing pilots/drones/missions\n- Checking conflicts\n- Suggesting assignments\n- Updating statuses\n\nTry: 'Show available pilots in Bangalore' or 'Suggest assignment for PRJ001'"
+            # Log the error for debugging
+            import traceback
+            error_details = traceback.format_exc()
+            print(f"Gemini API Error: {str(e)}\n{error_details}")
+            
+            return f"I can help you with:\n- Viewing pilots/drones/missions\n- Checking conflicts\n- Suggesting assignments\n- Updating statuses\n\nTry: 'Show available pilots in Bangalore' or 'Suggest assignment for PRJ001'\n\n*(AI response unavailable: {str(e)})*"
 
 
 # Main UI
