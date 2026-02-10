@@ -1,6 +1,7 @@
 """
 Drone Operations Coordinator AI Agent
 Main Streamlit Application
+Version: 2.0 with Full CRUD Support
 """
 
 import streamlit as st
