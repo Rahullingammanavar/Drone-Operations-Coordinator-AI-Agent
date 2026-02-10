@@ -10,7 +10,14 @@ from dotenv import load_dotenv
 import sys
 
 # Add src to path
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+
+# Force reload of modules (for Streamlit Cloud)
+import importlib
+if 'src.sheets_manager' in sys.modules:
+    importlib.reload(sys.modules['src.sheets_manager'])
+if 'src.conflict_detector' in sys.modules:
+    importlib.reload(sys.modules['src.conflict_detector'])
 
 from src.sheets_manager import get_sheets_manager
 from src.conflict_detector import ConflictDetector
