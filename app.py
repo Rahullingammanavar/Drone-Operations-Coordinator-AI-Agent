@@ -82,8 +82,13 @@ def init_gemini():
         raise ValueError("GEMINI_API_KEY not found in environment or secrets")
     
     genai.configure(api_key=api_key)
-    # Use the latest model name
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    # Use the correct model name for the API version
+    try:
+        # Try the newer model first
+        model = genai.GenerativeModel('gemini-1.5-pro')
+    except:
+        # Fall back to the stable model name
+        model = genai.GenerativeModel('gemini-pro')
     return model
 
 
