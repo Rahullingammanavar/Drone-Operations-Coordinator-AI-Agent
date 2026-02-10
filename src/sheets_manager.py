@@ -16,7 +16,7 @@ load_dotenv()
 class SheetsManager:
     """Manages Google Sheets data operations"""
     
-    def __init__(self):
+       def __init__(self):
         """Initialize Google Sheets connection"""
         self.scopes = [
             'https://www.googleapis.com/auth/spreadsheets',
@@ -50,6 +50,21 @@ class SheetsManager:
         self.client = gspread.authorize(self.creds)
         
         # Get Sheets ID from Streamlit secrets or environment variable
+        try:
+            import streamlit as st
+            if hasattr(st, 'secrets') and 'GOOGLE_SHEETS_ID' in st.secrets:
+                self.spreadsheet_id = st.secrets['GOOGLE_SHEETS_ID']
+            else:
+                self.spreadsheet_id = os.getenv('GOOGLE_SHEETS_ID')
+        except ImportError:
+            self.spreadsheet_id = os.getenv('GOOGLE_SHEETS_ID')
+            
+        self.spreadsheet = self.client.open_by_key(self.spreadsheet_id)
+        
+        # Cache for sheets
+        self.pilot_sheet = self.spreadsheet.worksheet('pilot_roster')
+        self.drone_sheet = self.spreadsheet.worksheet('drone_fleet')
+        self.missions_sheet = self.spreadsheet.worksheet('missions')
         try:
             import streamlit as st
             if hasattr(st, 'secrets') and 'GOOGLE_SHEETS_ID' in st.secrets:
