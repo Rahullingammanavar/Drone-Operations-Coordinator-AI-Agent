@@ -23,14 +23,42 @@ class SheetsManager:
             'https://www.googleapis.com/auth/drive'
         ]
         
-        credentials_file = os.getenv('GOOGLE_SERVICE_ACCOUNT_FILE', 'credentials.json')
-        self.creds = Credentials.from_service_account_file(
-            credentials_file,
-            scopes=self.scopes
-        )
+        # Try to load from Streamlit secrets first (for cloud deployment)
+        try:
+            import streamlit as st
+            if hasattr(st, 'secrets') and 'gcp_service_account' in st.secrets:
+                # Use Streamlit secrets
+                self.creds = Credentials.from_service_account_info(
+                    st.secrets['gcp_service_account'],
+                    scopes=self.scopes
+                )
+            else:
+                # Fall back to local file
+                credentials_file = os.getenv('GOOGLE_SERVICE_ACCOUNT_FILE', 'credentials.json')
+                self.creds = Credentials.from_service_account_file(
+                    credentials_file,
+                    scopes=self.scopes
+                )
+        except ImportError:
+            # Running without Streamlit, use local file
+            credentials_file = os.getenv('GOOGLE_SERVICE_ACCOUNT_FILE', 'credentials.json')
+            self.creds = Credentials.from_service_account_file(
+                credentials_file,
+                scopes=self.scopes
+            )
         
         self.client = gspread.authorize(self.creds)
-        self.spreadsheet_id = os.getenv('GOOGLE_SHEETS_ID')
+        
+        # Get Sheets ID from Streamlit secrets or environment variable
+        try:
+            import streamlit as st
+            if hasattr(st, 'secrets') and 'GOOGLE_SHEETS_ID' in st.secrets:
+                self.spreadsheet_id = st.secrets['GOOGLE_SHEETS_ID']
+            else:
+                self.spreadsheet_id = os.getenv('GOOGLE_SHEETS_ID')
+        except ImportError:
+            self.spreadsheet_id = os.getenv('GOOGLE_SHEETS_ID')
+            
         self.spreadsheet = self.client.open_by_key(self.spreadsheet_id)
         
         # Cache for sheets
