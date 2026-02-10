@@ -67,7 +67,7 @@ if 'sheets_manager' not in st.session_state:
 # Initialize Gemini
 @st.cache_resource
 def init_gemini():
-    """Initialize Gemini API"""
+    """Initialize Gemini API with dynamic model detection"""
     api_key = os.getenv('GEMINI_API_KEY')
     if not api_key:
         # Try to get from Streamlit secrets
@@ -82,14 +82,46 @@ def init_gemini():
         raise ValueError("GEMINI_API_KEY not found in environment or secrets")
     
     genai.configure(api_key=api_key)
-    # Use the correct model name for the API version
+    
+    # List of models to try in order of preference
+    model_candidates = [
+        'gemini-1.5-pro-latest',
+        'gemini-1.5-pro',
+        'gemini-pro',
+        'models/gemini-1.5-pro-latest',
+        'models/gemini-1.5-pro',
+        'models/gemini-pro',
+    ]
+    
+    # Try to list available models
     try:
-        # Try the newer model first
-        model = genai.GenerativeModel('gemini-1.5-pro')
-    except:
-        # Fall back to the stable model name
-        model = genai.GenerativeModel('gemini-pro')
-    return model
+        available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        print(f"Available models: {available_models}")
+        
+        # Use the first available model that supports generateContent
+        if available_models:
+            # Prefer gemini models
+            gemini_models = [m for m in available_models if 'gemini' in m.lower()]
+            if gemini_models:
+                model_name = gemini_models[0]
+                print(f"Using model: {model_name}")
+                return genai.GenerativeModel(model_name)
+    except Exception as e:
+        print(f"Could not list models: {e}")
+    
+    # Fallback: try each candidate model
+    for model_name in model_candidates:
+        try:
+            model = genai.GenerativeModel(model_name)
+            # Test the model with a simple request
+            model.generate_content("Hello", generation_config={'max_output_tokens': 1})
+            print(f"Successfully using model: {model_name}")
+            return model
+        except Exception as e:
+            print(f"Model {model_name} failed: {e}")
+            continue
+    
+    raise ValueError("Could not find a working Gemini model. Please check your API key and quota.")
 
 
 # Initialize Sheets Manager
