@@ -64,22 +64,22 @@ if 'sheets_manager' not in st.session_state:
     st.session_state.sheets_manager = None
 
 
-# Initialize Grok AI
+# Initialize Groq AI
 @st.cache_resource
-def init_grok():
-    """Initialize Grok AI API"""
-    api_key = os.getenv('GROK_API_KEY')
+def init_groq():
+    """Initialize Groq AI API"""
+    api_key = os.getenv('GROQ_API_KEY')
     if not api_key:
         # Try to get from Streamlit secrets
         try:
             import streamlit as st
-            if hasattr(st, 'secrets') and 'GROK_API_KEY' in st.secrets:
-                api_key = st.secrets['GROK_API_KEY']
+            if hasattr(st, 'secrets') and 'GROQ_API_KEY' in st.secrets:
+                api_key = st.secrets['GROQ_API_KEY']
         except:
             pass
     
     if not api_key:
-        raise ValueError("GROK_API_KEY not found in environment or secrets")
+        raise ValueError("GROQ_API_KEY not found in environment or secrets")
     
     return api_key
 
@@ -480,15 +480,15 @@ User Query: {query}
 Provide a helpful, concise response based on the available data.
 """
             
-            # Call Grok API
-            api_key = init_grok()
+            # Call Groq API
+            api_key = init_groq()
             headers = {
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json"
             }
             
             payload = {
-                "model": "grok-2-latest",
+                "model": "llama-3.1-8b-instant",
                 "messages": [
                     {"role": "system", "content": "You are a Drone Operations Coordinator AI assistant for Skylark Drones. Provide helpful, concise responses based on the data provided."},
                     {"role": "user", "content": context}
@@ -497,7 +497,7 @@ Provide a helpful, concise response based on the available data.
             }
             
             response = requests.post(
-                "https://api.x.ai/v1/chat/completions",
+                "https://api.groq.com/openai/v1/chat/completions",
                 headers=headers,
                 json=payload
             )
@@ -511,7 +511,7 @@ Provide a helpful, concise response based on the available data.
             # Log the error for debugging
             import traceback
             error_details = traceback.format_exc()
-            print(f"Grok API Error: {str(e)}\n{error_details}")
+            print(f"Groq API Error: {str(e)}\n{error_details}")
             
             return f"I can help you with:\n- Viewing pilots/drones/missions\n- Checking conflicts\n- Suggesting assignments\n- Updating statuses\n\nTry: 'Show available pilots in Bangalore' or 'Suggest assignment for PRJ001'\n\n*(AI response unavailable: {str(e)})*"
 
