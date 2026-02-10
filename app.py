@@ -13,8 +13,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 from src.sheets_manager import get_sheets_manager
 from src.conflict_detector import ConflictDetector
-import google.generativeai as genai
 import pandas as pd
+import requests
 
 # Load environment variables
 load_dotenv()
@@ -64,64 +64,24 @@ if 'sheets_manager' not in st.session_state:
     st.session_state.sheets_manager = None
 
 
-# Initialize Gemini
+# Initialize Grok AI
 @st.cache_resource
-def init_gemini():
-    """Initialize Gemini API with dynamic model detection"""
-    api_key = os.getenv('GEMINI_API_KEY')
+def init_grok():
+    """Initialize Grok AI API"""
+    api_key = os.getenv('GROK_API_KEY')
     if not api_key:
         # Try to get from Streamlit secrets
         try:
             import streamlit as st
-            if hasattr(st, 'secrets') and 'GEMINI_API_KEY' in st.secrets:
-                api_key = st.secrets['GEMINI_API_KEY']
+            if hasattr(st, 'secrets') and 'GROK_API_KEY' in st.secrets:
+                api_key = st.secrets['GROK_API_KEY']
         except:
             pass
     
     if not api_key:
-        raise ValueError("GEMINI_API_KEY not found in environment or secrets")
+        raise ValueError("GROK_API_KEY not found in environment or secrets")
     
-    genai.configure(api_key=api_key)
-    
-    # List of models to try in order of preference
-    model_candidates = [
-        'gemini-1.5-pro-latest',
-        'gemini-1.5-pro',
-        'gemini-pro',
-        'models/gemini-1.5-pro-latest',
-        'models/gemini-1.5-pro',
-        'models/gemini-pro',
-    ]
-    
-    # Try to list available models
-    try:
-        available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        print(f"Available models: {available_models}")
-        
-        # Use the first available model that supports generateContent
-        if available_models:
-            # Prefer gemini models
-            gemini_models = [m for m in available_models if 'gemini' in m.lower()]
-            if gemini_models:
-                model_name = gemini_models[0]
-                print(f"Using model: {model_name}")
-                return genai.GenerativeModel(model_name)
-    except Exception as e:
-        print(f"Could not list models: {e}")
-    
-    # Fallback: try each candidate model
-    for model_name in model_candidates:
-        try:
-            model = genai.GenerativeModel(model_name)
-            # Test the model with a simple request
-            model.generate_content("Hello", generation_config={'max_output_tokens': 1})
-            print(f"Successfully using model: {model_name}")
-            return model
-        except Exception as e:
-            print(f"Model {model_name} failed: {e}")
-            continue
-    
-    raise ValueError("Could not find a working Gemini model. Please check your API key and quota.")
+    return api_key
 
 
 # Initialize Sheets Manager
@@ -481,11 +441,9 @@ def process_query(query: str, sheets_manager) -> str:
 Valid pilot statuses: Available, Assigned, On Leave
 Valid drone statuses: Available, Maintenance, Assigned"""
     
-    # Default: Use Gemini for general queries
+    # Default: Use AI for general queries
     else:
         try:
-            model = init_gemini()
-            
             # Build context
             pilots = sheets_manager.get_pilots()
             drones = sheets_manager.get_drones()
@@ -522,14 +480,38 @@ User Query: {query}
 Provide a helpful, concise response based on the available data.
 """
             
-            response = model.generate_content(context)
-            return response.text
+            # Call Grok API
+            api_key = init_grok()
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "model": "grok-2-latest",
+                "messages": [
+                    {"role": "system", "content": "You are a Drone Operations Coordinator AI assistant for Skylark Drones. Provide helpful, concise responses based on the data provided."},
+                    {"role": "user", "content": context}
+                ],
+                "max_tokens": 500
+            }
+            
+            response = requests.post(
+                "https://api.x.ai/v1/chat/completions",
+                headers=headers,
+                json=payload
+            )
+            
+            if response.status_code == 200:
+                return response.json()['choices'][0]['message']['content']
+            else:
+                return f"I can help you with:\n- Viewing pilots/drones/missions\n- Checking conflicts\n- Suggesting assignments\n- Updating statuses\n\nTry: 'Show available pilots in Bangalore' or 'Suggest assignment for PRJ001'\n\n*(AI response unavailable: {response.status_code} - {response.text})*"
             
         except Exception as e:
             # Log the error for debugging
             import traceback
             error_details = traceback.format_exc()
-            print(f"Gemini API Error: {str(e)}\n{error_details}")
+            print(f"Grok API Error: {str(e)}\n{error_details}")
             
             return f"I can help you with:\n- Viewing pilots/drones/missions\n- Checking conflicts\n- Suggesting assignments\n- Updating statuses\n\nTry: 'Show available pilots in Bangalore' or 'Suggest assignment for PRJ001'\n\n*(AI response unavailable: {str(e)})*"
 
