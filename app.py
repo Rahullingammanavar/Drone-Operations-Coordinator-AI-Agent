@@ -441,6 +441,113 @@ def process_query(query: str, sheets_manager) -> str:
 Valid pilot statuses: Available, Assigned, On Leave
 Valid drone statuses: Available, Maintenance, Assigned"""
     
+    # Add new drone
+    elif 'add' in query_lower and 'drone' in query_lower:
+        # Parse: "Add drone D005 model DJI M300 capabilities RGB, Thermal location Bangalore"
+        import re
+        
+        # Extract drone details
+        drone_id_match = re.search(r'drone\s+(\w+)', query_lower)
+        model_match = re.search(r'model\s+([\w\s]+?)(?:\s+capabilities|\s+location|$)', query_lower)
+        capabilities_match = re.search(r'capabilities\s+([\w,\s]+?)(?:\s+location|$)', query_lower)
+        location_match = re.search(r'location\s+(\w+)', query_lower)
+        
+        if not all([drone_id_match, model_match, capabilities_match, location_match]):
+            return """To add a drone, use this format:
+"Add drone D005 model DJI M300 capabilities RGB, Thermal location Bangalore"
+
+Required fields:
+- drone_id (e.g., D005)
+- model (e.g., DJI M300)
+- capabilities (e.g., RGB, Thermal, LiDAR)
+- location (e.g., Bangalore, Mumbai)"""
+        
+        drone_data = {
+            'drone_id': drone_id_match.group(1).upper(),
+            'model': model_match.group(1).strip().title(),
+            'capabilities': capabilities_match.group(1).strip().title(),
+            'location': location_match.group(1).strip().title(),
+            'status': 'Available',
+            'current_assignment': '–',
+            'maintenance_due': '2026-12-31'
+        }
+        
+        success = sheets_manager.add_drone(drone_data)
+        if success:
+            return f"✅ Successfully added drone **{drone_data['drone_id']}** ({drone_data['model']}) with {drone_data['capabilities']} capabilities in {drone_data['location']}"
+        else:
+            return f"❌ Failed to add drone. Drone ID {drone_data['drone_id']} may already exist."
+    
+    # Add new pilot
+    elif 'add' in query_lower and 'pilot' in query_lower:
+        # Parse: "Add pilot P005 name Rahul skills Mapping, Survey certifications DGCA location Bangalore"
+        import re
+        
+        # Extract pilot details
+        pilot_id_match = re.search(r'pilot\s+(\w+)', query_lower)
+        name_match = re.search(r'name\s+([\w\s]+?)(?:\s+skills|\s+certifications|\s+location|$)', query_lower)
+        skills_match = re.search(r'skills\s+([\w,\s]+?)(?:\s+certifications|\s+location|$)', query_lower)
+        certs_match = re.search(r'certifications\s+([\w,\s]+?)(?:\s+location|$)', query_lower)
+        location_match = re.search(r'location\s+(\w+)', query_lower)
+        
+        if not all([pilot_id_match, name_match, skills_match, certs_match, location_match]):
+            return """To add a pilot, use this format:
+"Add pilot P005 name Rahul skills Mapping, Survey certifications DGCA location Bangalore"
+
+Required fields:
+- pilot_id (e.g., P005)
+- name (e.g., Rahul)
+- skills (e.g., Mapping, Survey, Inspection, Thermal)
+- certifications (e.g., DGCA, Night Ops)
+- location (e.g., Bangalore, Mumbai)"""
+        
+        pilot_data = {
+            'pilot_id': pilot_id_match.group(1).upper(),
+            'name': name_match.group(1).strip().title(),
+            'skills': skills_match.group(1).strip().title(),
+            'certifications': certs_match.group(1).strip().upper(),
+            'location': location_match.group(1).strip().title(),
+            'status': 'Available',
+            'current_assignment': '–',
+            'available_from': '–'
+        }
+        
+        success = sheets_manager.add_pilot(pilot_data)
+        if success:
+            return f"✅ Successfully added pilot **{pilot_data['name']}** ({pilot_data['pilot_id']}) with skills: {pilot_data['skills']} in {pilot_data['location']}"
+        else:
+            return f"❌ Failed to add pilot. Pilot ID {pilot_data['pilot_id']} may already exist."
+    
+    # Delete drone
+    elif 'delete' in query_lower and 'drone' in query_lower:
+        import re
+        drone_id_match = re.search(r'drone\s+(\w+)', query_lower)
+        
+        if not drone_id_match:
+            return "To delete a drone, use: 'Delete drone D001'"
+        
+        drone_id = drone_id_match.group(1).upper()
+        success = sheets_manager.delete_drone(drone_id)
+        if success:
+            return f"✅ Successfully deleted drone **{drone_id}**"
+        else:
+            return f"❌ Failed to delete drone {drone_id}. Drone not found."
+    
+    # Delete pilot
+    elif 'delete' in query_lower and 'pilot' in query_lower:
+        import re
+        pilot_id_match = re.search(r'pilot\s+(\w+)', query_lower)
+        
+        if not pilot_id_match:
+            return "To delete a pilot, use: 'Delete pilot P001'"
+        
+        pilot_id = pilot_id_match.group(1).upper()
+        success = sheets_manager.delete_pilot(pilot_id)
+        if success:
+            return f"✅ Successfully deleted pilot **{pilot_id}**"
+        else:
+            return f"❌ Failed to delete pilot {pilot_id}. Pilot not found."
+    
     # Default: Use AI for general queries
     else:
         try:
@@ -571,12 +678,24 @@ def main():
     # Display example queries
     with st.expander("💡 Example Queries"):
         st.markdown("""
+        **Query Commands:**
         - **"Show available pilots in Bangalore"**
         - **"Which drones can handle thermal imaging in Mumbai?"**
         - **"Suggest assignment for PRJ002"**
         - **"Check all conflicts"**
         - **"Show urgent missions"**
-        - **"List all available drones"**
+        
+        **Add New (writes to Google Sheets):**
+        - **"Add drone D005 model DJI M300 capabilities RGB, Thermal location Bangalore"**
+        - **"Add pilot P005 name Rahul skills Mapping, Survey certifications DGCA location Bangalore"**
+        
+        **Update Status (writes to Google Sheets):**
+        - **"Update pilot P001 status to Assigned"**
+        - **"Update drone D001 status to Maintenance"**
+        
+        **Delete (writes to Google Sheets):**
+        - **"Delete drone D005"**
+        - **"Delete pilot P005"**
         """)
     
     # Display chat messages

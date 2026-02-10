@@ -202,6 +202,134 @@ class SheetsManager:
             print(f"Error updating drone assignment: {e}")
             return False
     
+    def add_pilot(self, pilot_data: dict) -> bool:
+        """
+        Add a new pilot to Google Sheet
+        
+        Args:
+            pilot_data: Dictionary with pilot details
+                - pilot_id: Unique ID (e.g., 'P005')
+                - name: Pilot name
+                - skills: Comma-separated skills
+                - certifications: Comma-separated certifications
+                - location: Base location
+                - status: Available/Assigned/On Leave
+                - current_assignment: Project ID or '–'
+                - available_from: Date or '–'
+        
+        Returns:
+            bool: True if successful
+        """
+        try:
+            # Check if pilot_id already exists
+            pilots = self.pilot_sheet.get_all_records()
+            for pilot in pilots:
+                if pilot['pilot_id'] == pilot_data['pilot_id']:
+                    print(f"Pilot {pilot_data['pilot_id']} already exists")
+                    return False
+            
+            # Append new row
+            row = [
+                pilot_data['pilot_id'],
+                pilot_data['name'],
+                pilot_data['skills'],
+                pilot_data['certifications'],
+                pilot_data['location'],
+                pilot_data.get('status', 'Available'),
+                pilot_data.get('current_assignment', '–'),
+                pilot_data.get('available_from', '–')
+            ]
+            self.pilot_sheet.append_row(row)
+            return True
+        except Exception as e:
+            print(f"Error adding pilot: {e}")
+            return False
+    
+    def add_drone(self, drone_data: dict) -> bool:
+        """
+        Add a new drone to Google Sheet
+        
+        Args:
+            drone_data: Dictionary with drone details
+                - drone_id: Unique ID (e.g., 'D005')
+                - model: Drone model
+                - capabilities: Comma-separated capabilities
+                - status: Available/Maintenance/Assigned
+                - location: Base location
+                - current_assignment: Project ID or '–'
+                - maintenance_due: Date
+        
+        Returns:
+            bool: True if successful
+        """
+        try:
+            # Check if drone_id already exists
+            drones = self.drone_sheet.get_all_records()
+            for drone in drones:
+                if drone['drone_id'] == drone_data['drone_id']:
+                    print(f"Drone {drone_data['drone_id']} already exists")
+                    return False
+            
+            # Append new row
+            row = [
+                drone_data['drone_id'],
+                drone_data['model'],
+                drone_data['capabilities'],
+                drone_data.get('status', 'Available'),
+                drone_data['location'],
+                drone_data.get('current_assignment', '–'),
+                drone_data.get('maintenance_due', '2026-12-31')
+            ]
+            self.drone_sheet.append_row(row)
+            return True
+        except Exception as e:
+            print(f"Error adding drone: {e}")
+            return False
+    
+    def delete_pilot(self, pilot_id: str) -> bool:
+        """
+        Delete a pilot from Google Sheet
+        
+        Args:
+            pilot_id: Pilot ID to delete
+        
+        Returns:
+            bool: True if successful
+        """
+        try:
+            pilots = self.pilot_sheet.get_all_records()
+            for idx, pilot in enumerate(pilots):
+                if pilot['pilot_id'] == pilot_id:
+                    row_number = idx + 2  # +2 for header and 1-indexing
+                    self.pilot_sheet.delete_row(row_number)
+                    return True
+            return False
+        except Exception as e:
+            print(f"Error deleting pilot: {e}")
+            return False
+    
+    def delete_drone(self, drone_id: str) -> bool:
+        """
+        Delete a drone from Google Sheet
+        
+        Args:
+            drone_id: Drone ID to delete
+        
+        Returns:
+            bool: True if successful
+        """
+        try:
+            drones = self.drone_sheet.get_all_records()
+            for idx, drone in enumerate(drones):
+                if drone['drone_id'] == drone_id:
+                    row_number = idx + 2  # +2 for header and 1-indexing
+                    self.drone_sheet.delete_row(row_number)
+                    return True
+            return False
+        except Exception as e:
+            print(f"Error deleting drone: {e}")
+            return False
+    
     def refresh_data(self):
         """Refresh cached data from Google Sheets"""
         # Re-fetch worksheets to get latest data
