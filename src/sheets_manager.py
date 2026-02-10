@@ -66,20 +66,32 @@ class SheetsManager:
         self.drone_sheet = self.spreadsheet.worksheet('drone_fleet')
         self.missions_sheet = self.spreadsheet.worksheet('missions')
     
+    def _fix_dataframe_columns(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Fix column names if they were read as a single comma-separated string"""
+        if len(df.columns) == 1 and ',' in str(df.columns[0]):
+            # The header was read as a single string, split it
+            col_names = str(df.columns[0]).split(',')
+            # Re-read the data properly
+            df.columns = col_names
+        return df
+    
     def get_pilots(self) -> pd.DataFrame:
         """Get all pilots data as DataFrame"""
         data = self.pilot_sheet.get_all_records()
-        return pd.DataFrame(data)
+        df = pd.DataFrame(data)
+        return self._fix_dataframe_columns(df)
     
     def get_drones(self) -> pd.DataFrame:
         """Get all drones data as DataFrame"""
         data = self.drone_sheet.get_all_records()
-        return pd.DataFrame(data)
+        df = pd.DataFrame(data)
+        return self._fix_dataframe_columns(df)
     
     def get_missions(self) -> pd.DataFrame:
         """Get all missions data as DataFrame"""
         data = self.missions_sheet.get_all_records()
-        return pd.DataFrame(data)
+        df = pd.DataFrame(data)
+        return self._fix_dataframe_columns(df)
     
     def update_pilot_status(self, pilot_id: str, new_status: str) -> bool:
         """
