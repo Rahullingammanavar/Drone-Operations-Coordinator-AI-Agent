@@ -35,109 +35,74 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for Professional UI
+# Clean, Simple UI
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    
-    * {
-        font-family: 'Inter', sans-serif;
+    .title {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 0.3rem;
     }
-    
-    .main-header {
-        font-size: 2.2rem;
-        font-weight: 700;
-        color: #0f172a;
-        text-align: center;
-        margin-bottom: 0.5rem;
-        letter-spacing: -0.5px;
+    .subtitle {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 1.5rem;
     }
-    
-    .sub-header {
-        font-size: 1rem;
-        color: #64748b;
-        text-align: center;
-        margin-bottom: 2rem;
-        font-weight: 400;
+    .stat-box {
+        background: #f0f7ff;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 8px;
     }
-    
-    .status-badge {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 20px;
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #0066cc;
+    }
+    .stat-label {
+        font-size: 0.8rem;
+        color: #666;
+    }
+    .btn-primary {
+        background: #0066cc;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-size: 0.85rem;
+        cursor: pointer;
+    }
+    .btn-secondary {
+        background: #e8f0fe;
+        color: #0066cc;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        cursor: pointer;
+    }
+    .section-title {
         font-size: 0.75rem;
         font-weight: 600;
+        color: #888;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        margin: 16px 0 8px 0;
     }
-    
-    .status-available { background: #dcfce7; color: #166534; }
-    .status-assigned { background: #dbeafe; color: #1e40af; }
-    .status-maintenance { background: #fee2e2; color: #991b1b; }
-    .status-leave { background: #fef3c7; color: #92400e; }
-    
-    .metric-card {
-        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-        padding: 1.25rem;
-        border-radius: 12px;
-        color: white;
-        text-align: center;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    .help-box {
+        background: #f8f9fa;
+        border-left: 3px solid #0066cc;
+        padding: 12px;
+        margin: 8px 0;
+        font-size: 0.85rem;
     }
-    
-    .metric-value {
-        font-size: 2rem;
-        font-weight: 700;
-        margin-bottom: 0.25rem;
-    }
-    
-    .metric-label {
-        font-size: 0.875rem;
-        opacity: 0.9;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .section-header {
-        font-size: 0.875rem;
-        font-weight: 600;
-        color: #475569;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 1rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid #e2e8f0;
-    }
-    
-    .stChatMessage {
-        padding: 1rem;
-        border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    
-    .stButton > button {
-        border-radius: 8px;
-        font-weight: 500;
-        transition: all 0.2s;
-    }
-    
-    .stButton > button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-    
-    .info-card {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 1rem;
-        margin-bottom: 0.75rem;
-    }
-    
-    .team-logo {
-        font-size: 3rem;
-        text-align: center;
-        margin-bottom: 0.5rem;
+    .command-tag {
+        background: #e8f0fe;
+        color: #0066cc;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-family: monospace;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -710,144 +675,163 @@ Provide a helpful, concise response based on the available data.
 
 # Main UI
 def main():
-    # Header Section
-    st.markdown('<div class="team-logo">🚁</div>', unsafe_allow_html=True)
-    st.markdown('<div class="main-header">Skylark Operations Hub</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-header">AI-Powered Fleet & Pilot Management System</div>', unsafe_allow_html=True)
+    # Simple Header
+    st.markdown('<div class="title">🚁 Skylark Drone Ops</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtitle">Manage your fleet and pilots easily</div>', unsafe_allow_html=True)
     
-    # Initialize managers
+    # Initialize
     try:
         sheets_manager = init_sheets_manager()
     except Exception as e:
-        st.error(f"⚠️ Connection Error: {str(e)}")
-        st.info("Please verify your Google Sheets credentials and permissions.")
+        st.error(f"Connection failed: {str(e)}")
         return
     
-    # Sidebar - Professional Dashboard
+    # Sidebar - Simple Stats
     with st.sidebar:
-        st.markdown('<div class="section-header">Fleet Overview</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Fleet Status</div>', unsafe_allow_html=True)
         
         pilot_summary = get_pilot_summary(sheets_manager)
         drone_summary = get_drone_summary(sheets_manager)
         
-        # Pilot Metrics
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.markdown(f'<div class="metric-value">{pilot_summary["total"]}</div>', unsafe_allow_html=True)
-        st.markdown('<div class="metric-label">Total Pilots</div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        st.markdown(f"""
-        <div style="display: flex; justify-content: space-between; margin: 0.5rem 0;">
-            <span>✅ Available: <b>{pilot_summary['available']}</b></span>
-            <span>📋 Assigned: <b>{pilot_summary['assigned']}</b></span>
+        # Pilots
+        st.markdown(f'''
+        <div class="stat-box">
+            <div class="stat-number">{pilot_summary['available']}/{pilot_summary['total']}</div>
+            <div class="stat-label">Pilots Available</div>
         </div>
-        <div style="display: flex; justify-content: space-between; margin: 0.5rem 0;">
-            <span>🏖️ On Leave: <b>{pilot_summary['on_leave']}</b></span>
+        ''', unsafe_allow_html=True)
+        
+        # Drones
+        st.markdown(f'''
+        <div class="stat-box">
+            <div class="stat-number">{drone_summary['available']}/{drone_summary['total']}</div>
+            <div class="stat-label">Drones Available</div>
         </div>
-        """, unsafe_allow_html=True)
+        ''', unsafe_allow_html=True)
         
-        st.divider()
+        st.markdown('<div class="section-title">Quick Actions</div>', unsafe_allow_html=True)
         
-        # Drone Metrics
-        st.markdown('<div class="metric-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">', unsafe_allow_html=True)
-        st.markdown(f'<div class="metric-value">{drone_summary["total"]}</div>', unsafe_allow_html=True)
-        st.markdown('<div class="metric-label">Total Drones</div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        if st.button("📋 All Pilots", use_container_width=True):
+            with st.chat_message("assistant"):
+                result = process_query("show all pilots", sheets_manager)
+                st.markdown(result)
         
-        st.markdown(f"""
-        <div style="display: flex; justify-content: space-between; margin: 0.5rem 0;">
-            <span>✅ Available: <b>{drone_summary['available']}</b></span>
-            <span>📋 Assigned: <b>{drone_summary['assigned']}</b></span>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin: 0.5rem 0;">
-            <span>🔧 Maintenance: <b>{drone_summary['maintenance']}</b></span>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.divider()
-        
-        # Quick Actions
-        st.markdown('<div class="section-header">Quick Actions</div>', unsafe_allow_html=True)
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🔍 Conflicts", use_container_width=True):
-                with st.chat_message("assistant"):
-                    result = process_query("check conflicts", sheets_manager)
-                    st.markdown(result)
-        with col2:
-            if st.button("📋 Pilots", use_container_width=True):
-                with st.chat_message("assistant"):
-                    result = process_query("show all pilots", sheets_manager)
-                    st.markdown(result)
-        
-        if st.button("🚁 View All Drones", use_container_width=True):
+        if st.button("🚁 All Drones", use_container_width=True):
             with st.chat_message("assistant"):
                 result = process_query("show all drones", sheets_manager)
                 st.markdown(result)
         
-        st.divider()
-        st.caption("© 2026 Skylark Drones | Operations Hub v2.0")
-    
-    # Main Chat Interface
-    st.markdown('<div class="section-header">Command Center</div>', unsafe_allow_html=True)
-    
-    # Quick Command Pills
-    st.markdown("**Quick Commands:**")
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        if st.button("Available Pilots", key="btn_pilots", use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": "Show available pilots"})
-            with st.chat_message("assistant"):
-                result = process_query("show available pilots", sheets_manager)
-                st.markdown(result)
-                st.session_state.messages.append({"role": "assistant", "content": result})
-    with col2:
-        if st.button("Check Conflicts", key="btn_conflicts", use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": "Check conflicts"})
+        if st.button("⚠️ Check Conflicts", use_container_width=True):
             with st.chat_message("assistant"):
                 result = process_query("check conflicts", sheets_manager)
                 st.markdown(result)
-                st.session_state.messages.append({"role": "assistant", "content": result})
-    with col3:
-        if st.button("Urgent Missions", key="btn_urgent", use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": "Show urgent missions"})
-            with st.chat_message("assistant"):
-                result = process_query("show urgent missions", sheets_manager)
-                st.markdown(result)
-                st.session_state.messages.append({"role": "assistant", "content": result})
-    with col4:
-        if st.button("Suggest Assignment", key="btn_suggest", use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": "Suggest assignment for PRJ001"})
-            with st.chat_message("assistant"):
-                result = process_query("suggest assignment for PRJ001", sheets_manager)
-                st.markdown(result)
-                st.session_state.messages.append({"role": "assistant", "content": result})
     
-    st.divider()
+    # Main Area - Simple Tabs
+    tab1, tab2, tab3 = st.tabs(["💬 Chat", "➕ Add New", "📖 Help"])
     
-    # Display example queries
-    with st.expander("📖 View All Commands"):
-        st.markdown("""
-        **🔍 Query Commands:**
-        - `Show available pilots in Bangalore`
-        - `Which drones can handle thermal imaging in Mumbai?`
-        - `Suggest assignment for PRJ002`
-        - `Check all conflicts`
-        - `Show urgent missions`
+    with tab1:
+        # Chat Interface
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
         
-        **➕ Add New (writes to Google Sheets):**
-        - `Add drone D005 model DJI M300 capabilities RGB, Thermal location Bangalore`
-        - `Add pilot P005 name Rahul skills Mapping, Survey certifications DGCA location Bangalore`
+        if prompt := st.chat_input("Type your command here..."):
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.markdown(prompt)
+            
+            with st.chat_message("assistant"):
+                with st.spinner("Processing..."):
+                    response = process_query(prompt, sheets_manager)
+                    st.markdown(response)
+            
+            st.session_state.messages.append({"role": "assistant", "content": response})
+    
+    with tab2:
+        st.markdown('<div class="section-title">Add New Pilot</div>', unsafe_allow_html=True)
         
-        **✏️ Update Status (writes to Google Sheets):**
-        - `Update pilot P001 status to Assigned`
-        - `Update drone D001 status to Maintenance`
+        col1, col2 = st.columns(2)
+        with col1:
+            p_id = st.text_input("Pilot ID", "P005", key="p_id")
+            p_name = st.text_input("Name", "", key="p_name")
+            p_skills = st.text_input("Skills (comma separated)", "Mapping, Survey", key="p_skills")
+        with col2:
+            p_certs = st.text_input("Certifications", "DGCA", key="p_certs")
+            p_loc = st.selectbox("Location", ["Bangalore", "Mumbai"], key="p_loc")
+            p_status = st.selectbox("Status", ["Available", "Assigned", "On Leave"], key="p_status")
         
-        **🗑️ Delete (writes to Google Sheets):**
-        - `Delete drone D005`
-        - `Delete pilot P005`
-        """)
+        if st.button("➕ Add Pilot", type="primary"):
+            pilot_data = {
+                'pilot_id': p_id.upper(),
+                'name': p_name,
+                'skills': p_skills,
+                'certifications': p_certs.upper(),
+                'location': p_loc,
+                'status': p_status,
+                'current_assignment': '–',
+                'available_from': '–'
+            }
+            success = sheets_manager.add_pilot(pilot_data)
+            if success:
+                st.success(f"✅ Pilot {p_name} added successfully!")
+            else:
+                st.error("❌ Failed to add pilot. ID may already exist.")
+        
+        st.divider()
+        
+        st.markdown('<div class="section-title">Add New Drone</div>', unsafe_allow_html=True)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            d_id = st.text_input("Drone ID", "D005", key="d_id")
+            d_model = st.text_input("Model", "DJI M300", key="d_model")
+            d_caps = st.text_input("Capabilities", "RGB, Thermal", key="d_caps")
+        with col2:
+            d_loc = st.selectbox("Location", ["Bangalore", "Mumbai"], key="d_loc")
+            d_status = st.selectbox("Drone Status", ["Available", "Maintenance", "Assigned"], key="d_status")
+        
+        if st.button("➕ Add Drone", type="primary"):
+            drone_data = {
+                'drone_id': d_id.upper(),
+                'model': d_model,
+                'capabilities': d_caps,
+                'location': d_loc,
+                'status': d_status,
+                'current_assignment': '–',
+                'maintenance_due': '2026-12-31'
+            }
+            success = sheets_manager.add_drone(drone_data)
+            if success:
+                st.success(f"✅ Drone {d_id.upper()} added successfully!")
+            else:
+                st.error("❌ Failed to add drone. ID may already exist.")
+    
+    with tab3:
+        st.markdown('<div class="section-title">Common Commands</div>', unsafe_allow_html=True)
+        
+        st.markdown('''
+        <div class="help-box">
+            <b>🔍 Search & Query</b><br>
+            <span class="command-tag">show pilots in Bangalore</span><br>
+            <span class="command-tag">show available drones</span><br>
+            <span class="command-tag">check conflicts</span><br>
+            <span class="command-tag">suggest assignment for PRJ001</span>
+        </div>
+        
+        <div class="help-box">
+            <b>✏️ Update Status</b><br>
+            <span class="command-tag">update pilot P001 status to Assigned</span><br>
+            <span class="command-tag">update drone D001 status to Maintenance</span>
+        </div>
+        
+        <div class="help-box">
+            <b>🗑️ Delete</b><br>
+            <span class="command-tag">delete pilot P005</span><br>
+            <span class="command-tag">delete drone D005</span>
+        </div>
+        ''', unsafe_allow_html=True)
+        
+        st.info("💡 Tip: You can also use the 'Add New' tab above to add pilots and drones with a simple form!")
     
     # Display chat messages
     for message in st.session_state.messages:
